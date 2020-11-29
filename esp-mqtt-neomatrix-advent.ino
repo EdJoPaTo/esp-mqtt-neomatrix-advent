@@ -80,7 +80,7 @@ void onConnectionEstablished() {
   client.subscribe(BASIC_TOPIC_SET "bri", [](const String & payload) {
     int newBri = strtol(payload.c_str(), 0, 10);
     if (bri != newBri) {
-      bri = newBri;
+      bri = max(0, min(255 - BRIGHTNESS_OFFSET, newBri));
       client.publish(BASIC_TOPIC_STATUS "bri", String(bri), mqtt_retained);
     }
   });
@@ -97,7 +97,7 @@ void onConnectionEstablished() {
     int parsed = strtol(payload.c_str(), 0, 10);
     int newCandles = max(0, min(4, parsed));
     if (candles != newCandles) {
-      candles = newCandles;
+      candles = max(0, min(4, newCandles));
       client.publish(BASIC_TOPIC_STATUS "candles", String(candles), mqtt_retained);
     }
   });
