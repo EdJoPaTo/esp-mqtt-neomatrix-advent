@@ -167,7 +167,7 @@ void loop() {
 
   matrix.fillScreen(0);
 
-  drawWreath(((bri / 3) + BRIGHTNESS_OFFSET) * on);
+  drawWreath(((bri / 2) + BRIGHTNESS_OFFSET) * on);
 
   drawCandle(1, 7, brightness, candles >= 1); // left
   drawCandle(9, 5, brightness, candles >= 2); // third
