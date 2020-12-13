@@ -111,7 +111,7 @@ void onConnectionEstablished() {
 }
 
 void drawHorizontalLine(int16_t y, int16_t x_start, int16_t x_end, uint16_t color) {
-  for (auto x = x_start; x < x_end; x++) {
+  for (auto x = x_start; x <= x_end; x++) {
     matrix.drawPixel(x, y, color);
   }
 }
@@ -119,16 +119,16 @@ void drawHorizontalLine(int16_t y, int16_t x_start, int16_t x_end, uint16_t colo
 void drawWreath(uint8_t brightness) {
   auto green = ColorHSV(120 * 182, 255, brightness);
 
-  drawHorizontalLine(10, 6, 11, green);
-  drawHorizontalLine(11, 3, 14, green);
+  drawHorizontalLine(10, 6, 10, green);
+  drawHorizontalLine(11, 3, 13, green);
 
   for (int y = 12; y <= 13; y++) {
-    drawHorizontalLine(y, 1, 6, green);
-    drawHorizontalLine(y, 11, 16, green);
+    drawHorizontalLine(y, 1, 5, green);
+    drawHorizontalLine(y, 11, 15, green);
   }
 
-  drawHorizontalLine(14, 1, 16, green);
-  drawHorizontalLine(15, 3, 14, green);
+  drawHorizontalLine(14, 1, 15, green);
+  drawHorizontalLine(15, 3, 13, green);
 }
 
 void drawCandle(int16_t x, int16_t y, uint8_t brightness, bool lit) {
