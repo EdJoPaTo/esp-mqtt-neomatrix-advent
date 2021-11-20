@@ -1,21 +1,17 @@
-#include <Adafruit_GFX.h>
 #include <Adafruit_NeoMatrix.h>
-#include <Adafruit_NeoPixel.h>
+#include <credentials.h>
 #include <EspMQTTClient.h>
 
 #define CLIENT_NAME "espMatrixAdvent"
+const bool MQTT_RETAINED = true;
 
 EspMQTTClient client(
-  "WifiSSID",
-  "WifiPassword",
-  "192.168.1.100",  // MQTT Broker server ip
-  "MQTTUsername",   // Can be omitted if not needed
-  "MQTTPassword",   // Can be omitted if not needed
+  WIFI_SSID,
+  WIFI_PASSWORD,
+  MQTT_SERVER, // MQTT Broker server ip
   CLIENT_NAME, // Client name that uniquely identify your device
   1883 // The MQTT port, default to 1883. this line can be omitted
 );
-
-const bool mqtt_retained = true;
 
 #define BASIC_TOPIC CLIENT_NAME "/"
 #define BASIC_TOPIC_SET BASIC_TOPIC "set/"
@@ -71,9 +67,9 @@ void setup() {
   matrix.setCursor(0, 0);
   matrix.show();
 
-  // Optional functionnalities of EspMQTTClient
-  client.enableDebuggingMessages(); // Enable debugging messages sent to serial output
-  client.enableLastWillMessage(BASIC_TOPIC "connected", "0", mqtt_retained);  // You can activate the retain flag by setting the third parameter to true
+  client.enableDebuggingMessages();
+  client.enableHTTPWebUpdater();
+  client.enableLastWillMessage(BASIC_TOPIC "connected", "0", MQTT_RETAINED);
 }
 
 void onConnectionEstablished() {
@@ -81,7 +77,7 @@ void onConnectionEstablished() {
     int newBri = strtol(payload.c_str(), 0, 10);
     if (bri != newBri) {
       bri = max(0, min(255 - BRIGHTNESS_OFFSET, newBri));
-      client.publish(BASIC_TOPIC_STATUS "bri", String(bri), mqtt_retained);
+      client.publish(BASIC_TOPIC_STATUS "bri", String(bri), MQTT_RETAINED);
     }
   });
 
@@ -89,7 +85,7 @@ void onConnectionEstablished() {
     boolean newOn = payload != "0";
     if (on != newOn) {
       on = newOn;
-      client.publish(BASIC_TOPIC_STATUS "on", payload, mqtt_retained);
+      client.publish(BASIC_TOPIC_STATUS "on", payload, MQTT_RETAINED);
     }
   });
 
@@ -98,16 +94,14 @@ void onConnectionEstablished() {
     int newCandles = max(0, min(4, parsed));
     if (candles != newCandles) {
       candles = max(0, min(4, newCandles));
-      client.publish(BASIC_TOPIC_STATUS "candles", String(candles), mqtt_retained);
+      client.publish(BASIC_TOPIC_STATUS "candles", String(candles), MQTT_RETAINED);
     }
   });
 
-  client.publish(BASIC_TOPIC "connected", "2", mqtt_retained);
-  client.publish(BASIC_TOPIC_STATUS "candles", String(candles), mqtt_retained);
-  client.publish(BASIC_TOPIC_STATUS "bri", String(bri), mqtt_retained);
-  client.publish(BASIC_TOPIC_STATUS "on", on ? "1" : "0", mqtt_retained);
-
-  digitalWrite(LED_BUILTIN, HIGH);
+  client.publish(BASIC_TOPIC "connected", "2", MQTT_RETAINED);
+  client.publish(BASIC_TOPIC_STATUS "candles", String(candles), MQTT_RETAINED);
+  client.publish(BASIC_TOPIC_STATUS "bri", String(bri), MQTT_RETAINED);
+  client.publish(BASIC_TOPIC_STATUS "on", on ? "1" : "0", MQTT_RETAINED);
 }
 
 void drawHorizontalLine(int16_t y, int16_t x_start, int16_t x_end, uint16_t color) {
@@ -171,10 +165,10 @@ void drawCandle(int16_t x, int16_t y, int16_t height, uint8_t brightness, bool l
 
 void loop() {
   client.loop();
+  digitalWrite(LED_BUILTIN, client.isConnected() ? HIGH : LOW);
+  digitalWrite(PIN_ON, on ? HIGH : LOW);
 
   auto brightness = (bri + BRIGHTNESS_OFFSET) * on;
-
-  digitalWrite(PIN_ON, on ? HIGH : LOW);
 
   matrix.fillScreen(ColorHSV(120 * 182, 255, brightness / 4));
 
