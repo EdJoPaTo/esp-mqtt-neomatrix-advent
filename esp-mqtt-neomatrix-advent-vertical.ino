@@ -61,6 +61,7 @@ void setup() {
   pinMode(PIN_ON, OUTPUT);
   Serial.begin(115200);
   matrix.begin();
+  matrix.setBrightness((bri + BRIGHTNESS_OFFSET) * on);
   matrix.setTextWrap(false);
   matrix.fillScreen(0);
 
@@ -77,6 +78,7 @@ void onConnectionEstablished() {
     int newBri = strtol(payload.c_str(), 0, 10);
     if (bri != newBri) {
       bri = max(0, min(255 - BRIGHTNESS_OFFSET, newBri));
+      matrix.setBrightness((bri + BRIGHTNESS_OFFSET) * on);
       client.publish(BASIC_TOPIC_STATUS "bri", String(bri), MQTT_RETAINED);
     }
   });
@@ -85,6 +87,7 @@ void onConnectionEstablished() {
     boolean newOn = payload != "0";
     if (on != newOn) {
       on = newOn;
+      matrix.setBrightness((bri + BRIGHTNESS_OFFSET) * on);
       client.publish(BASIC_TOPIC_STATUS "on", payload, MQTT_RETAINED);
     }
   });
@@ -112,23 +115,8 @@ void drawHorizontalLine(int16_t y, int16_t x_start, int16_t x_end, uint16_t colo
   }
 }
 
-void drawWreath(uint8_t brightness) {
-  auto green = ColorHSV(120 * 182, 255, brightness);
-
-  drawHorizontalLine(10, 6, 10, green);
-  drawHorizontalLine(11, 3, 13, green);
-
-  for (int y = 12; y <= 13; y++) {
-    drawHorizontalLine(y, 1, 5, green);
-    drawHorizontalLine(y, 11, 15, green);
-  }
-
-  drawHorizontalLine(14, 1, 15, green);
-  drawHorizontalLine(15, 3, 13, green);
-}
-
-void drawCandle(int16_t x, int16_t y, int16_t height, uint8_t brightness, bool lit) {
-  auto red = ColorHSV(0 * 182, 255, brightness);
+void drawCandle(int16_t x, int16_t y, int16_t height, bool lit) {
+  auto red = ColorHSV(0 * 182, 255, 255);
 
   for (int i = 0; i < height; i++) {
     drawHorizontalLine(y - i, x, x + 2, red);
@@ -143,7 +131,7 @@ void drawCandle(int16_t x, int16_t y, int16_t height, uint8_t brightness, bool l
   drawHorizontalLine(y + 6, x + 1, x + 1, glow);
 
   if (lit) {
-    auto flame = ColorHSV(40 * 182, 255, brightness);
+    auto flame = ColorHSV(40 * 182, 255, 255);
     int height = (millis() + x) % 5;
 
     for (int i = 0; i <= height; i++) {
@@ -168,14 +156,12 @@ void loop() {
   digitalWrite(LED_BUILTIN, client.isConnected() ? HIGH : LOW);
   digitalWrite(PIN_ON, on ? HIGH : LOW);
 
-  auto brightness = (bri + BRIGHTNESS_OFFSET) * on;
+  matrix.fillScreen(ColorHSV(120 * 182, 255, 100));
 
-  matrix.fillScreen(ColorHSV(120 * 182, 255, brightness / 4));
-
-  drawCandle(1, 3, 4, brightness, candles >= 1);
-  drawCandle(5, 11, 5, brightness, candles >= 4);
-  drawCandle(0, 19, 5, brightness, candles >= 3);
-  drawCandle(4, 26, 4, brightness, candles >= 2);
+  drawCandle(1, 3, 4, candles >= 1);
+  drawCandle(5, 11, 5, candles >= 4);
+  drawCandle(0, 19, 5, candles >= 3);
+  drawCandle(4, 26, 4, candles >= 2);
 
   auto glow_color = 0;
   matrix.drawPixel(0, 3, glow_color);

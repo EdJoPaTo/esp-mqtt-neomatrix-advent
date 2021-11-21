@@ -61,6 +61,7 @@ void setup() {
   pinMode(PIN_ON, OUTPUT);
   Serial.begin(115200);
   matrix.begin();
+  matrix.setBrightness((bri + BRIGHTNESS_OFFSET) * on);
   matrix.setTextWrap(false);
   matrix.fillScreen(0);
 
@@ -77,6 +78,7 @@ void onConnectionEstablished() {
     int newBri = strtol(payload.c_str(), 0, 10);
     if (bri != newBri) {
       bri = max(0, min(255 - BRIGHTNESS_OFFSET, newBri));
+      matrix.setBrightness((bri + BRIGHTNESS_OFFSET) * on);
       client.publish(BASIC_TOPIC_STATUS "bri", String(bri), MQTT_RETAINED);
     }
   });
@@ -85,6 +87,7 @@ void onConnectionEstablished() {
     boolean newOn = payload != "0";
     if (on != newOn) {
       on = newOn;
+      matrix.setBrightness((bri + BRIGHTNESS_OFFSET) * on);
       client.publish(BASIC_TOPIC_STATUS "on", payload, MQTT_RETAINED);
     }
   });
@@ -112,8 +115,8 @@ void drawHorizontalLine(int16_t y, int16_t x_start, int16_t x_end, uint16_t colo
   }
 }
 
-void drawWreath(uint8_t brightness) {
-  auto green = ColorHSV(120 * 182, 255, brightness);
+void drawWreath() {
+  auto green = ColorHSV(120 * 182, 255, 120);
 
   drawHorizontalLine(10, 6, 10, green);
   drawHorizontalLine(11, 3, 13, green);
@@ -127,8 +130,8 @@ void drawWreath(uint8_t brightness) {
   drawHorizontalLine(15, 3, 13, green);
 }
 
-void drawCandle(int16_t x, int16_t y, uint8_t brightness, bool lit) {
-  auto red = ColorHSV(0 * 182, 255, brightness);
+void drawCandle(int16_t x, int16_t y, bool lit) {
+  auto red = ColorHSV(0 * 182, 255, 255);
 
   for (int i = 0; i < 6; i++) {
     matrix.drawPixel(x, y + i, red);
@@ -137,7 +140,7 @@ void drawCandle(int16_t x, int16_t y, uint8_t brightness, bool lit) {
   }
 
   if (lit) {
-    auto flame = ColorHSV(40 * 182, 255, brightness);
+    auto flame = ColorHSV(40 * 182, 255, 255);
     int type = (millis() + x) % 4;
 
     for (int i = 0; i <= type; i++) {
@@ -159,16 +162,14 @@ void loop() {
   digitalWrite(LED_BUILTIN, client.isConnected() ? HIGH : LOW);
   digitalWrite(PIN_ON, on ? HIGH : LOW);
 
-  auto brightness = (bri + BRIGHTNESS_OFFSET) * on;
-
   matrix.fillScreen(0);
 
-  drawWreath(((bri / 2) + BRIGHTNESS_OFFSET) * on);
+  drawWreath();
 
-  drawCandle(1, 7, brightness, candles >= 1); // left
-  drawCandle(9, 5, brightness, candles >= 2); // third
-  drawCandle(13, 7, brightness, candles >= 3); // right
-  drawCandle(5, 9, brightness, candles >= 4); // second
+  drawCandle(1, 7, candles >= 1); // left
+  drawCandle(9, 5, candles >= 2); // third
+  drawCandle(13, 7, candles >= 3); // right
+  drawCandle(5, 9, candles >= 4); // second
 
   matrix.show();
 
