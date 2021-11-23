@@ -116,7 +116,7 @@ void drawHorizontalLine(int16_t y, int16_t x_start, int16_t x_end, uint16_t colo
 }
 
 void drawWreath() {
-  auto green = ColorHSV(120 * 182, 255, 120);
+  auto green = ColorHSV(120 * 182, 255, 160);
 
   drawHorizontalLine(10, 6, 10, green);
   drawHorizontalLine(11, 3, 13, green);
