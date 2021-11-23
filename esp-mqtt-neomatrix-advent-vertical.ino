@@ -6,11 +6,13 @@
 const bool MQTT_RETAINED = true;
 
 EspMQTTClient client(
-  WIFI_SSID,
-  WIFI_PASSWORD,
-  MQTT_SERVER, // MQTT Broker server ip
-  CLIENT_NAME, // Client name that uniquely identify your device
-  1883 // The MQTT port, default to 1883. this line can be omitted
+    WIFI_SSID,
+    WIFI_PASSWORD,
+    MQTT_SERVER,   // MQTT Broker server ip
+    CLIENT_NAME,   // Client name that uniquely identify your device
+    MQTT_USERNAME, // Can be omitted if not needed
+    MQTT_PASSWORD, // Can be omitted if not needed
+    1883           // The MQTT port, default to 1883. this line can be omitted
 );
 
 #define BASIC_TOPIC CLIENT_NAME "/"
@@ -18,7 +20,7 @@ EspMQTTClient client(
 #define BASIC_TOPIC_STATUS BASIC_TOPIC "status/"
 
 const int PIN_MATRIX = 13; // D7
-const int PIN_ON = 5; // D1
+const int PIN_ON = 5;      // D1
 
 // MATRIX DECLARATION:
 // Parameter 1 = width of NeoPixel matrix
@@ -38,13 +40,6 @@ const int PIN_ON = 5; // D1
 //   NEO_KHZ400  400 KHz (classic 'v1' (not v2) FLORA pixels, WS2811 drivers)
 //   NEO_GRB     Pixels are wired for GRB bitstream (most NeoPixel products)
 //   NEO_RGB     Pixels are wired for RGB bitstream (v1 FLORA pixels, not v2)
-
-
-// Example for NeoPixel Shield.  In this application we'd like to use it
-// as a 5x8 tall matrix, with the USB port positioned at the top of the
-// Arduino.  When held that way, the first pixel is at the top right, and
-// lines are arranged in columns, progressive order.  The shield uses
-// 800 KHz (v2) pixels that expect GRB color data.
 Adafruit_NeoMatrix matrix = Adafruit_NeoMatrix(8, 32, PIN_MATRIX,
   NEO_MATRIX_BOTTOM  + NEO_MATRIX_RIGHT +
   NEO_MATRIX_ROWS + NEO_MATRIX_ZIGZAG,
@@ -57,7 +52,7 @@ uint8_t candles = 0;
 boolean on = true;
 
 void setup() {
-  pinMode(LED_BUILTIN, OUTPUT);     // Initialize the BUILTIN_LED pin as an output
+  pinMode(LED_BUILTIN, OUTPUT);
   pinMode(PIN_ON, OUTPUT);
   Serial.begin(115200);
   matrix.begin();
@@ -75,7 +70,7 @@ void setup() {
 }
 
 void onConnectionEstablished() {
-  client.subscribe(BASIC_TOPIC_SET "bri", [](const String & payload) {
+  client.subscribe(BASIC_TOPIC_SET "bri", [](const String &payload) {
     int newBri = strtol(payload.c_str(), 0, 10);
     if (bri != newBri) {
       bri = max(0, min(255 - BRIGHTNESS_OFFSET, newBri));
@@ -84,7 +79,7 @@ void onConnectionEstablished() {
     }
   });
 
-  client.subscribe(BASIC_TOPIC_SET "on", [](const String & payload) {
+  client.subscribe(BASIC_TOPIC_SET "on", [](const String &payload) {
     boolean newOn = payload != "0";
     if (on != newOn) {
       on = newOn;
@@ -93,7 +88,7 @@ void onConnectionEstablished() {
     }
   });
 
-  client.subscribe(BASIC_TOPIC_SET "candles", [](const String & payload) {
+  client.subscribe(BASIC_TOPIC_SET "candles", [](const String &payload) {
     int parsed = strtol(payload.c_str(), 0, 10);
     int newCandles = max(0, min(4, parsed));
     if (candles != newCandles) {
@@ -174,58 +169,58 @@ void loop() {
 }
 
 uint16_t ColorHSV(uint16_t hue, uint8_t sat, uint8_t val) {
-    uint8_t r, g, b, r2, g2, b2;
+  uint8_t r, g, b, r2, g2, b2;
 
-    // Remap 0-65535 to 0-1529. Pure red is CENTERED on the 64K rollover;
-    // 0 is not the start of pure red, but the midpoint...a few values above
-    // zero and a few below 65536 all yield pure red (similarly, 32768 is the
-    // midpoint, not start, of pure cyan). The 8-bit RGB hexcone (256 values
-    // each for red, green, blue) really only allows for 1530 distinct hues
-    // (not 1536, more on that below), but the full unsigned 16-bit type was
-    // chosen for hue so that one's code can easily handle a contiguous color
-    // wheel by allowing hue to roll over in either direction.
-    hue = (hue * 1530L + 32768) / 65536;
+  // Remap 0-65535 to 0-1529. Pure red is CENTERED on the 64K rollover;
+  // 0 is not the start of pure red, but the midpoint...a few values above
+  // zero and a few below 65536 all yield pure red (similarly, 32768 is the
+  // midpoint, not start, of pure cyan). The 8-bit RGB hexcone (256 values
+  // each for red, green, blue) really only allows for 1530 distinct hues
+  // (not 1536, more on that below), but the full unsigned 16-bit type was
+  // chosen for hue so that one's code can easily handle a contiguous color
+  // wheel by allowing hue to roll over in either direction.
+  hue = (hue * 1530L + 32768) / 65536;
 
-    // Convert hue to R,G,B (nested ifs faster than divide+mod+switch):
-    if(hue < 510) {         // Red to Green-1
-      b = 0;
-      if(hue < 255) {       //   Red to Yellow-1
-        r = 255;
-        g = hue;            //     g = 0 to 254
-      } else {              //   Yellow to Green-1
-        r = 510 - hue;      //     r = 255 to 1
-        g = 255;
-      }
-    } else if(hue < 1020) { // Green to Blue-1
-      r = 0;
-      if(hue <  765) {      //   Green to Cyan-1
-        g = 255;
-        b = hue - 510;      //     b = 0 to 254
-      } else {              //   Cyan to Blue-1
-        g = 1020 - hue;     //     g = 255 to 1
-        b = 255;
-      }
-    } else if(hue < 1530) { // Blue to Red-1
-      g = 0;
-      if(hue < 1275) {      //   Blue to Magenta-1
-        r = hue - 1020;     //     r = 0 to 254
-        b = 255;
-      } else {              //   Magenta to Red-1
-        r = 255;
-        b = 1530 - hue;     //     b = 255 to 1
-      }
-    } else {                // Last 0.5 Red (quicker than % operator)
+  // Convert hue to R,G,B (nested ifs faster than divide+mod+switch):
+  if(hue < 510) {         // Red to Green-1
+    b = 0;
+    if(hue < 255) {       //   Red to Yellow-1
       r = 255;
-      g = b = 0;
+      g = hue;            //     g = 0 to 254
+    } else {              //   Yellow to Green-1
+      r = 510 - hue;      //     r = 255 to 1
+      g = 255;
     }
+  } else if(hue < 1020) { // Green to Blue-1
+    r = 0;
+    if(hue <  765) {      //   Green to Cyan-1
+      g = 255;
+      b = hue - 510;      //     b = 0 to 254
+    } else {              //   Cyan to Blue-1
+      g = 1020 - hue;     //     g = 255 to 1
+      b = 255;
+    }
+  } else if(hue < 1530) { // Blue to Red-1
+    g = 0;
+    if(hue < 1275) {      //   Blue to Magenta-1
+      r = hue - 1020;     //     r = 0 to 254
+      b = 255;
+    } else {              //   Magenta to Red-1
+      r = 255;
+      b = 1530 - hue;     //     b = 255 to 1
+    }
+  } else {                // Last 0.5 Red (quicker than % operator)
+    r = 255;
+    g = b = 0;
+  }
 
-    // Apply saturation and value to R,G,B
-    uint32_t v1 =   1 + val; // 1 to 256; allows >>8 instead of /255
-    uint16_t s1 =   1 + sat; // 1 to 256; same reason
-    uint8_t  s2 = 255 - sat; // 255 to 0
+  // Apply saturation and value to R,G,B
+  uint32_t v1 =   1 + val; // 1 to 256; allows >>8 instead of /255
+  uint16_t s1 =   1 + sat; // 1 to 256; same reason
+  uint8_t  s2 = 255 - sat; // 255 to 0
 
-    r2 = ((((r * s1) >> 8) + s2) * v1) >> 8;
-    g2 = ((((g * s1) >> 8) + s2) * v1) >> 8;
-    b2 = ((((b * s1) >> 8) + s2) * v1) >> 8;
-    return matrix.Color(r2, g2, b2);
+  r2 = ((((r * s1) >> 8) + s2) * v1) >> 8;
+  g2 = ((((g * s1) >> 8) + s2) * v1) >> 8;
+  b2 = ((((b * s1) >> 8) + s2) * v1) >> 8;
+  return matrix.Color(r2, g2, b2);
 }
