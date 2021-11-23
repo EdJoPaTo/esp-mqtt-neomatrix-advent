@@ -70,6 +70,7 @@ void setup() {
 
   client.enableDebuggingMessages();
   client.enableHTTPWebUpdater();
+  client.enableOTA();
   client.enableLastWillMessage(BASIC_TOPIC "connected", "0", MQTT_RETAINED);
 }
 
