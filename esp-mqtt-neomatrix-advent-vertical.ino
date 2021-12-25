@@ -45,8 +45,6 @@ Adafruit_NeoMatrix matrix = Adafruit_NeoMatrix(8, 32, PIN_MATRIX,
   NEO_MATRIX_ROWS + NEO_MATRIX_ZIGZAG,
   NEO_GRB            + NEO_KHZ800);
 
-const uint8_t BRIGHTNESS_OFFSET = 7;
-
 uint8_t bri = 20;
 uint8_t candles = 0;
 boolean on = true;
@@ -56,7 +54,7 @@ void setup() {
   pinMode(PIN_ON, OUTPUT);
   Serial.begin(115200);
   matrix.begin();
-  matrix.setBrightness((bri + BRIGHTNESS_OFFSET) * on);
+  matrix.setBrightness(bri * on);
   matrix.setTextWrap(false);
   matrix.fillScreen(0);
 
@@ -73,8 +71,8 @@ void onConnectionEstablished() {
   client.subscribe(BASIC_TOPIC_SET "bri", [](const String &payload) {
     int newBri = strtol(payload.c_str(), 0, 10);
     if (bri != newBri) {
-      bri = max(0, min(255 - BRIGHTNESS_OFFSET, newBri));
-      matrix.setBrightness((bri + BRIGHTNESS_OFFSET) * on);
+      bri = max(0, min(255, newBri));
+      matrix.setBrightness(bri * on);
       client.publish(BASIC_TOPIC_STATUS "bri", String(bri), MQTT_RETAINED);
     }
   });
@@ -83,7 +81,7 @@ void onConnectionEstablished() {
     boolean newOn = payload != "0";
     if (on != newOn) {
       on = newOn;
-      matrix.setBrightness((bri + BRIGHTNESS_OFFSET) * on);
+      matrix.setBrightness(bri * on);
       client.publish(BASIC_TOPIC_STATUS "on", payload, MQTT_RETAINED);
     }
   });
