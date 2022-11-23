@@ -5,7 +5,7 @@
 #define CLIENT_NAME "espMatrixAdvent"
 const bool MQTT_RETAINED = true;
 
-EspMQTTClient client(
+EspMQTTClient mqttClient(
     WIFI_SSID,
     WIFI_PASSWORD,
     MQTT_SERVER,   // MQTT Broker server ip
@@ -15,9 +15,9 @@ EspMQTTClient client(
     1883           // The MQTT port, default to 1883. this line can be omitted
 );
 
-#define BASIC_TOPIC CLIENT_NAME "/"
-#define BASIC_TOPIC_SET BASIC_TOPIC "set/"
-#define BASIC_TOPIC_STATUS BASIC_TOPIC "status/"
+#define BASE_TOPIC CLIENT_NAME "/"
+#define BASE_TOPIC_SET BASE_TOPIC "set/"
+#define BASE_TOPIC_STATUS BASE_TOPIC "status/"
 
 const int PIN_MATRIX = 13; // D7
 const int PIN_ON = 5;      // D1
@@ -61,44 +61,45 @@ void setup() {
   matrix.setCursor(0, 0);
   matrix.show();
 
-  client.enableDebuggingMessages();
-  client.enableHTTPWebUpdater();
-  client.enableOTA();
-  client.enableLastWillMessage(BASIC_TOPIC "connected", "0", MQTT_RETAINED);
+  mqttClient.enableDebuggingMessages();
+  mqttClient.enableHTTPWebUpdater();
+  mqttClient.enableOTA();
+  mqttClient.enableLastWillMessage(BASE_TOPIC "connected", "0", MQTT_RETAINED);
 }
 
 void onConnectionEstablished() {
-  client.subscribe(BASIC_TOPIC_SET "bri", [](const String &payload) {
-    int newBri = strtol(payload.c_str(), 0, 10);
+  mqttClient.subscribe(BASE_TOPIC_SET "bri", [](const String &payload) {
+    int value = strtol(payload.c_str(), 0, 10);
+    uint8_t newBri = max(0, min(255, value));
     if (bri != newBri) {
-      bri = max(0, min(255, newBri));
+      bri = newBri;
       matrix.setBrightness(bri * on);
-      client.publish(BASIC_TOPIC_STATUS "bri", String(bri), MQTT_RETAINED);
+      mqttClient.publish(BASE_TOPIC_STATUS "bri", String(bri), MQTT_RETAINED);
     }
   });
 
-  client.subscribe(BASIC_TOPIC_SET "on", [](const String &payload) {
-    boolean newOn = payload != "0";
+  mqttClient.subscribe(BASE_TOPIC_SET "on", [](const String &payload) {
+    boolean newOn = payload == "1" || payload == "true";
     if (on != newOn) {
       on = newOn;
       matrix.setBrightness(bri * on);
-      client.publish(BASIC_TOPIC_STATUS "on", payload, MQTT_RETAINED);
+      mqttClient.publish(BASE_TOPIC_STATUS "on", payload, MQTT_RETAINED);
     }
   });
 
-  client.subscribe(BASIC_TOPIC_SET "candles", [](const String &payload) {
+  mqttClient.subscribe(BASE_TOPIC_SET "candles", [](const String &payload) {
     int parsed = strtol(payload.c_str(), 0, 10);
     int newCandles = max(0, min(4, parsed));
     if (candles != newCandles) {
-      candles = max(0, min(4, newCandles));
-      client.publish(BASIC_TOPIC_STATUS "candles", String(candles), MQTT_RETAINED);
+      candles = newCandles;
+      mqttClient.publish(BASE_TOPIC_STATUS "candles", String(candles), MQTT_RETAINED);
     }
   });
 
-  client.publish(BASIC_TOPIC "connected", "2", MQTT_RETAINED);
-  client.publish(BASIC_TOPIC_STATUS "candles", String(candles), MQTT_RETAINED);
-  client.publish(BASIC_TOPIC_STATUS "bri", String(bri), MQTT_RETAINED);
-  client.publish(BASIC_TOPIC_STATUS "on", on ? "1" : "0", MQTT_RETAINED);
+  mqttClient.publish(BASE_TOPIC_STATUS "candles", String(candles), MQTT_RETAINED);
+  mqttClient.publish(BASE_TOPIC_STATUS "bri", String(bri), MQTT_RETAINED);
+  mqttClient.publish(BASE_TOPIC_STATUS "on", String(on), MQTT_RETAINED);
+  mqttClient.publish(BASE_TOPIC "connected", "2", MQTT_RETAINED);
 }
 
 void drawHorizontalLine(int16_t y, int16_t x_start, int16_t x_end, uint16_t color) {
@@ -152,8 +153,8 @@ void drawCandle(int16_t x, int16_t y, bool lit) {
 }
 
 void loop() {
-  client.loop();
-  digitalWrite(LED_BUILTIN, client.isConnected() ? HIGH : LOW);
+  mqttClient.loop();
+  digitalWrite(LED_BUILTIN, mqttClient.isConnected() ? HIGH : LOW);
   digitalWrite(PIN_ON, on ? HIGH : LOW);
 
   matrix.fillScreen(0);
