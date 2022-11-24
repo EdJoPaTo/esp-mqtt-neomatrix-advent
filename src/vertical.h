@@ -75,7 +75,7 @@ void drawCandle(int16_t x, int16_t y, int16_t height, bool lit)
 
 void drawLoop()
 {
-	static const auto bg = ColorHSV(120, 255, 100);
+	static const auto bg = ColorHSV(120, 255, 110);
 	matrix.fillScreen(bg);
 
 	drawCandle(1, 3, 4, candles >= 1);
