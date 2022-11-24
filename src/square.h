@@ -99,4 +99,6 @@ void drawLoop()
 	drawCandle(9, 5, candles >= 2);	// third
 	drawCandle(13, 7, candles >= 3); // right
 	drawCandle(5, 9, candles >= 4);	// second
+
+	matrix.show();
 }

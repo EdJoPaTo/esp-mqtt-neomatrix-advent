@@ -99,7 +99,6 @@ void loop()
 	}
 
 	drawLoop();
-	matrix.show();
 
 	delay(50);
 }

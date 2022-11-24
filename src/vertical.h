@@ -94,4 +94,6 @@ void drawLoop()
 	static const auto glow_color = 0;
 	matrix.drawPixel(0, 3, glow_color);
 	matrix.drawPixel(7, 26, glow_color);
+
+	matrix.show();
 }
