@@ -57,30 +57,21 @@ void onConnectionEstablished()
 {
 	mqttClient.subscribe(BASE_TOPIC_SET "bri", [](const String &payload) {
 		auto value = strtol(payload.c_str(), 0, 10);
-		uint8_t newBri = max(1l, min(255l, value));
-		if (bri != newBri) {
-			bri = newBri;
-			matrix.setBrightness(bri * on);
-			mqttClient.publish(BASE_TOPIC_STATUS "bri", String(bri), MQTT_RETAINED);
-		}
+		bri = max(1l, min(255l, value));
+		matrix.setBrightness(bri * on);
+		mqttClient.publish(BASE_TOPIC_STATUS "bri", String(bri), MQTT_RETAINED);
 	});
 
 	mqttClient.subscribe(BASE_TOPIC_SET "on", [](const String &payload) {
-		auto newOn = payload == "1" || payload == "true";
-		if (on != newOn) {
-			on = newOn;
-			matrix.setBrightness(bri * on);
-			mqttClient.publish(BASE_TOPIC_STATUS "on", payload, MQTT_RETAINED);
-		}
+		on = payload == "1" || payload == "true";
+		matrix.setBrightness(bri * on);
+		mqttClient.publish(BASE_TOPIC_STATUS "on", payload, MQTT_RETAINED);
 	});
 
 	mqttClient.subscribe(BASE_TOPIC_SET "candles", [](const String &payload) {
 		auto parsed = strtol(payload.c_str(), 0, 10);
-		uint8_t newCandles = max(0l, min(4l, parsed));
-		if (candles != newCandles) {
-			candles = newCandles;
-			mqttClient.publish(BASE_TOPIC_STATUS "candles", String(candles), MQTT_RETAINED);
-		}
+		candles = max(0l, min(4l, parsed));
+		mqttClient.publish(BASE_TOPIC_STATUS "candles", String(candles), MQTT_RETAINED);
 	});
 
 	mqttClient.publish(BASE_TOPIC_STATUS "candles", String(candles), MQTT_RETAINED);
