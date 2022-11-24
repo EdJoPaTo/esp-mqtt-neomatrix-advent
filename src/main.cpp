@@ -41,11 +41,6 @@ void setup()
 	Serial.begin(115200);
 	matrix.begin();
 	matrix.setBrightness(bri * on);
-	matrix.setTextWrap(false);
-	matrix.fillScreen(0);
-
-	matrix.setCursor(0, 0);
-	matrix.show();
 
 	mqttClient.enableDebuggingMessages();
 	mqttClient.enableHTTPWebUpdater();
