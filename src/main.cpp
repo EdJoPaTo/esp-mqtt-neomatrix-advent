@@ -56,8 +56,8 @@ void setup()
 void onConnectionEstablished()
 {
 	mqttClient.subscribe(BASE_TOPIC_SET "bri", [](const String &payload) {
-		int value = strtol(payload.c_str(), 0, 10);
-		uint8_t newBri = max(0, min(255, value));
+		auto value = strtol(payload.c_str(), 0, 10);
+		uint8_t newBri = max(1l, min(255l, value));
 		if (bri != newBri) {
 			bri = newBri;
 			matrix.setBrightness(bri * on);
@@ -66,7 +66,7 @@ void onConnectionEstablished()
 	});
 
 	mqttClient.subscribe(BASE_TOPIC_SET "on", [](const String &payload) {
-		boolean newOn = payload == "1" || payload == "true";
+		auto newOn = payload == "1" || payload == "true";
 		if (on != newOn) {
 			on = newOn;
 			matrix.setBrightness(bri * on);
@@ -75,8 +75,8 @@ void onConnectionEstablished()
 	});
 
 	mqttClient.subscribe(BASE_TOPIC_SET "candles", [](const String &payload) {
-		int parsed = strtol(payload.c_str(), 0, 10);
-		int newCandles = max(0, min(4, parsed));
+		auto parsed = strtol(payload.c_str(), 0, 10);
+		uint8_t newCandles = max(0l, min(4l, parsed));
 		if (candles != newCandles) {
 			candles = newCandles;
 			mqttClient.publish(BASE_TOPIC_STATUS "candles", String(candles), MQTT_RETAINED);
@@ -102,9 +102,9 @@ void loop()
 	if (mqttClient.isWifiConnected() && now >= nextMeasure)
 	{
 		nextMeasure = now + 5000;
-		long rssi = WiFi.RSSI();
-		float avgRssi = mkRssi.addMeasurement(rssi);
-		Serial.printf("RSSI          in dBm: %8ld    Average: %10.2f\n", rssi, avgRssi);
+		auto rssi = WiFi.RSSI();
+		auto avgRssi = mkRssi.addMeasurement(rssi);
+		Serial.printf("RSSI          in dBm: %8d    Average: %10.2f\n", rssi, avgRssi);
 	}
 
 	drawLoop();

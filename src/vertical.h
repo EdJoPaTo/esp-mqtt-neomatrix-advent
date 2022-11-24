@@ -1,5 +1,10 @@
 #pragma once
 
+const uint16_t TOTAL_WIDTH = 8;
+const uint16_t TOTAL_HEIGHT = 32;
+
+const uint16_t TOTAL_PIXELS = TOTAL_WIDTH * TOTAL_HEIGHT;
+
 // MATRIX DECLARATION:
 // Parameter 1 = width of NeoPixel matrix
 // Parameter 2 = height of matrix
@@ -18,16 +23,16 @@
 //   NEO_KHZ400  400 KHz (classic 'v1' (not v2) FLORA pixels, WS2811 drivers)
 //   NEO_GRB     Pixels are wired for GRB bitstream (most NeoPixel products)
 //   NEO_RGB     Pixels are wired for RGB bitstream (v1 FLORA pixels, not v2)
-Adafruit_NeoMatrix matrix = Adafruit_NeoMatrix(8, 32, PIN_MATRIX,
+Adafruit_NeoMatrix matrix = Adafruit_NeoMatrix(TOTAL_WIDTH, TOTAL_HEIGHT, PIN_MATRIX,
 	NEO_MATRIX_BOTTOM + NEO_MATRIX_RIGHT +
 	NEO_MATRIX_ROWS + NEO_MATRIX_ZIGZAG,
 	NEO_GRB + NEO_KHZ800);
 
+const int16_t X_MIN = 0;
+const int16_t X_MAX = TOTAL_WIDTH - 1;
 void drawHorizontalLine(int16_t y, int16_t x_start, int16_t x_end, uint16_t color)
 {
-	int16_t x_min = 0;
-	int16_t x_max = matrix.width() - 1;
-	for (auto x = max(x_min, x_start); x <= min(x_end, x_max); x++)
+	for (auto x = max(X_MIN, x_start); x <= min(x_end, X_MAX); x++)
 	{
 		matrix.drawPixel(x, y, color);
 	}
@@ -35,14 +40,14 @@ void drawHorizontalLine(int16_t y, int16_t x_start, int16_t x_end, uint16_t colo
 
 void drawCandle(int16_t x, int16_t y, int16_t height, bool lit)
 {
-	auto red = ColorHSV(0, 255, 255);
+	static const auto red = ColorHSV(0, 255, 255);
 
 	for (int i = 0; i < height; i++)
 	{
 		drawHorizontalLine(y - i, x, x + 2, red);
 	}
 
-	auto glow = 0;
+	static const auto glow = 0;
 	drawHorizontalLine(y + 1, x - 1, x + 3, glow);
 	drawHorizontalLine(y + 2, x - 2, x + 4, glow);
 	drawHorizontalLine(y + 3, x - 3, x + 5, glow);
@@ -52,16 +57,16 @@ void drawCandle(int16_t x, int16_t y, int16_t height, bool lit)
 
 	if (lit)
 	{
-		auto flame = ColorHSV(40, 255, 255);
-		int height = (millis() + x) % 5;
+		static const auto flame = ColorHSV(40, 255, 255);
+		auto height = (millis() + x) % 5;
 
-		for (int i = 0; i <= height; i++)
+		for (unsigned long i = 0; i <= height; i++)
 		{
 			matrix.drawPixel(x + 1, y + 1 + i, flame);
 		}
 
-		int width = (millis() + x) % 2;
-		int direction = (millis() + x) % 3;
+		auto width = (millis() + x) % 2;
+		auto direction = (millis() + x) % 3;
 
 		if (direction == 0 && height > 1)
 		{
@@ -78,14 +83,15 @@ void drawCandle(int16_t x, int16_t y, int16_t height, bool lit)
 
 void drawLoop()
 {
-	matrix.fillScreen(ColorHSV(120, 255, 100));
+	static const auto bg = ColorHSV(120, 255, 100);
+	matrix.fillScreen(bg);
 
 	drawCandle(1, 3, 4, candles >= 1);
 	drawCandle(5, 11, 5, candles >= 4);
 	drawCandle(0, 19, 5, candles >= 3);
 	drawCandle(4, 26, 4, candles >= 2);
 
-	auto glow_color = 0;
+	static const auto glow_color = 0;
 	matrix.drawPixel(0, 3, glow_color);
 	matrix.drawPixel(7, 26, glow_color);
 }

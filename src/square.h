@@ -1,5 +1,10 @@
 #pragma once
 
+const uint16_t TOTAL_WIDTH = 16;
+const uint16_t TOTAL_HEIGHT = 16;
+
+const uint16_t TOTAL_PIXELS = TOTAL_WIDTH * TOTAL_HEIGHT;
+
 // MATRIX DECLARATION:
 // Parameter 1 = width of NeoPixel matrix
 // Parameter 2 = height of matrix
@@ -18,16 +23,16 @@
 //   NEO_KHZ400  400 KHz (classic 'v1' (not v2) FLORA pixels, WS2811 drivers)
 //   NEO_GRB     Pixels are wired for GRB bitstream (most NeoPixel products)
 //   NEO_RGB     Pixels are wired for RGB bitstream (v1 FLORA pixels, not v2)
-Adafruit_NeoMatrix matrix = Adafruit_NeoMatrix(16, 16, PIN_MATRIX,
+Adafruit_NeoMatrix matrix = Adafruit_NeoMatrix(TOTAL_WIDTH, TOTAL_HEIGHT, PIN_MATRIX,
 	NEO_MATRIX_BOTTOM + NEO_MATRIX_RIGHT +
 	NEO_MATRIX_COLUMNS + NEO_MATRIX_ZIGZAG,
 	NEO_GRB + NEO_KHZ800);
 
+const int16_t X_MIN = 0;
+const int16_t X_MAX = TOTAL_WIDTH - 1;
 void drawHorizontalLine(int16_t y, int16_t x_start, int16_t x_end, uint16_t color)
 {
-	int16_t x_min = 0;
-	int16_t x_max = matrix.width() - 1;
-	for (auto x = max(x_min, x_start); x <= min(x_end, x_max); x++)
+	for (auto x = max(X_MIN, x_start); x <= min(x_end, X_MAX); x++)
 	{
 		matrix.drawPixel(x, y, color);
 	}
@@ -35,7 +40,7 @@ void drawHorizontalLine(int16_t y, int16_t x_start, int16_t x_end, uint16_t colo
 
 void drawWreath()
 {
-	auto green = ColorHSV(120, 255, 160);
+	static const auto green = ColorHSV(120, 255, 160);
 
 	drawHorizontalLine(10, 6, 10, green);
 	drawHorizontalLine(11, 3, 13, green);
@@ -52,7 +57,7 @@ void drawWreath()
 
 void drawCandle(int16_t x, int16_t y, bool lit)
 {
-	auto red = ColorHSV(0, 255, 255);
+	static const auto red = ColorHSV(0, 255, 255);
 
 	for (int i = 0; i < 6; i++)
 	{
@@ -63,10 +68,10 @@ void drawCandle(int16_t x, int16_t y, bool lit)
 
 	if (lit)
 	{
-		auto flame = ColorHSV(40, 255, 255);
-		int type = (millis() + x) % 4;
+		static const auto flame = ColorHSV(40, 255, 255);
+		auto type = (millis() + x) % 4;
 
-		for (int i = 0; i <= type; i++)
+		for (unsigned long i = 0; i <= type; i++)
 		{
 			matrix.drawPixel(x + 1, y - 1 - i, flame);
 		}
