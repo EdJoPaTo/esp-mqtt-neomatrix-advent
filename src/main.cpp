@@ -3,8 +3,6 @@
 #include <EspMQTTClient.h>
 #include <MqttKalmanPublish.h>
 
-#include "math.h"
-
 #define CLIENT_NAME "espMatrixAdvent"
 const bool MQTT_RETAINED = true;
 

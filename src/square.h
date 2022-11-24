@@ -28,15 +28,7 @@ Adafruit_NeoMatrix matrix = Adafruit_NeoMatrix(TOTAL_WIDTH, TOTAL_HEIGHT, PIN_MA
 	NEO_MATRIX_COLUMNS + NEO_MATRIX_ZIGZAG,
 	NEO_GRB + NEO_KHZ800);
 
-const int16_t X_MIN = 0;
-const int16_t X_MAX = TOTAL_WIDTH - 1;
-void drawHorizontalLine(int16_t y, int16_t x_start, int16_t x_end, uint16_t color)
-{
-	for (auto x = max(X_MIN, x_start); x <= min(x_end, X_MAX); x++)
-	{
-		matrix.drawPixel(x, y, color);
-	}
-}
+#include "matrix_helper.h"
 
 void drawWreath()
 {
