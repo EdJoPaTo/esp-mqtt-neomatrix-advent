@@ -67,9 +67,6 @@ void onConnectionEstablished()
 		mqttClient.publish(BASE_TOPIC_STATUS "candles", String(candles), MQTT_RETAINED);
 	});
 
-	mqttClient.publish(BASE_TOPIC_STATUS "candles", String(candles), MQTT_RETAINED);
-	mqttClient.publish(BASE_TOPIC_STATUS "bri", String(bri), MQTT_RETAINED);
-	mqttClient.publish(BASE_TOPIC_STATUS "on", String(on), MQTT_RETAINED);
 	mqttClient.publish(BASE_TOPIC "git-version", GIT_VERSION, MQTT_RETAINED);
 	mqttClient.publish(BASE_TOPIC "connected", "2", MQTT_RETAINED);
 }
