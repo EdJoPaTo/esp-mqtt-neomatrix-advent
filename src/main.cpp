@@ -27,7 +27,7 @@ MQTTKalmanPublish mkRssi(mqttClient, BASE_TOPIC_STATUS "rssi", MQTT_RETAINED, 12
 
 uint8_t bri = 20;
 uint8_t candles = 0;
-boolean on = true;
+bool on = true;
 
 // #include "vertical.h"
 #include "square.h"
