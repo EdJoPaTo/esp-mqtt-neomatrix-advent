@@ -3,7 +3,6 @@
 #include <EspMQTTClient.h>
 #include <MqttKalmanPublish.h>
 
-#define CLIENT_NAME "espMatrixAdvent"
 const bool MQTT_RETAINED = true;
 
 EspMQTTClient mqttClient(
@@ -67,6 +66,7 @@ void onConnectionEstablished()
 		mqttClient.publish(BASE_TOPIC_STATUS "candles", String(candles), MQTT_RETAINED);
 	});
 
+	mqttClient.publish(BASE_TOPIC "git-remote", GIT_REMOTE, MQTT_RETAINED);
 	mqttClient.publish(BASE_TOPIC "git-version", GIT_VERSION, MQTT_RETAINED);
 	mqttClient.publish(BASE_TOPIC "connected", "2", MQTT_RETAINED);
 }
