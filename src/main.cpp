@@ -1,7 +1,7 @@
-#include <Adafruit_NeoMatrix.h>
 #include <credentials.h>
 #include <EspMQTTClient.h>
 #include <MqttKalmanPublish.h>
+#include <NeoPixelBus.h>
 
 const bool MQTT_RETAINED = true;
 
@@ -19,12 +19,13 @@ EspMQTTClient mqttClient(
 #define BASE_TOPIC_SET BASE_TOPIC "set/"
 #define BASE_TOPIC_STATUS BASE_TOPIC "status/"
 
-const int PIN_MATRIX = 13; // D7
 const int PIN_ON = 5; // D1
 
 MQTTKalmanPublish mkRssi(mqttClient, BASE_TOPIC_STATUS "rssi", MQTT_RETAINED, 12 * 5 /* every 5 min */, 10);
 
-uint8_t bri = 20;
+// Percentage from 0.0f to 1.0f
+float bri = 0.05;
+// Amount from 0 to 4
 uint8_t candles = 0;
 bool on = true;
 
@@ -36,8 +37,7 @@ void setup()
 	pinMode(LED_BUILTIN, OUTPUT);
 	pinMode(PIN_ON, OUTPUT);
 	Serial.begin(115200);
-	matrix.begin();
-	matrix.setBrightness(bri * on);
+	strip.Begin();
 
 	mqttClient.enableDebuggingMessages();
 	mqttClient.enableHTTPWebUpdater();
@@ -48,15 +48,14 @@ void setup()
 void onConnectionEstablished()
 {
 	mqttClient.subscribe(BASE_TOPIC_SET "bri", [](const String &payload) {
-		auto value = strtol(payload.c_str(), 0, 10);
-		bri = max(1l, min(255l, value));
-		matrix.setBrightness(bri * on);
-		mqttClient.publish(BASE_TOPIC_STATUS "bri", String(bri), MQTT_RETAINED);
+		auto value = strtof(payload.c_str(), 0) / 100.0f;
+		if (!isfinite(value)) return;
+		bri = max(2 / 255.0f, min(1.0f, value));
+		mqttClient.publish(BASE_TOPIC_STATUS "bri", String(bri * 100), MQTT_RETAINED);
 	});
 
 	mqttClient.subscribe(BASE_TOPIC_SET "on", [](const String &payload) {
 		on = payload == "1" || payload == "true";
-		matrix.setBrightness(bri * on);
 		mqttClient.publish(BASE_TOPIC_STATUS "on", payload, MQTT_RETAINED);
 	});
 
