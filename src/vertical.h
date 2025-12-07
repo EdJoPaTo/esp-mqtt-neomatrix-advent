@@ -37,7 +37,7 @@ void drawCandle(int16_t x, int16_t y, int16_t height, bool lit)
 	if (lit)
 	{
 		auto flame = HsbColor(40 / 360.0f, 1.0f, bri * on);
-		auto height = (millis() + x) % 5;
+		auto height = (millis() + x) % 4;
 
 		for (unsigned long i = 0; i <= height; i++)
 		{
@@ -53,7 +53,7 @@ void drawCandle(int16_t x, int16_t y, int16_t height, bool lit)
 		}
 		else if (direction == 1 && height > 2)
 		{
-			drawHorizontalLine(y + 3, x + 1 - width, x + 1, flame);
+			drawHorizontalLine(y + 2, x + 1 - width, x + 1, flame);
 		}
 	}
 
